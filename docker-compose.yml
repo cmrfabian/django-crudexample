@@ -1,0 +1,35 @@
+version: "3.9"
+   
+services:
+  bd:
+    image: postgres
+    volumes:
+    ## Volumen para base de datos en $HOME (fuera de directorio de trabajo)
+      - $HOME/database-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    restart: always
+  web:
+    build: . ## Build de contenedor de aplicación
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8081" 
+    volumes:
+      - .:/code
+      - $HOME/media:/media/
+    ports:
+    ## Exposición de puertos
+      - "8081:8081"
+    environment:
+      - POSTGRES_NAME=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=bd
+    restart: always
+    depends_on:
+    ## Dependencia de base de datos.
+      - bd
+  
